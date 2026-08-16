@@ -13,6 +13,7 @@ from groundwork_api.ingestion.service import IngestionService
 from groundwork_api.ingestion.storage import LocalFileStorage
 from groundwork_api.repositories.documents import DocumentRepository
 from groundwork_api.repositories.vectors import VectorRepository
+from groundwork_api.retrieval.service import RetrievalService
 
 
 @asynccontextmanager
@@ -34,6 +35,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         storage=LocalFileStorage(settings.upload_directory),
         chunk_size=settings.chunk_size_tokens,
         overlap=settings.chunk_overlap_tokens,
+    )
+    app.state.retrieval_service = RetrievalService(
+        documents=app.state.document_repository,
+        vectors=app.state.vector_repository,
+        embeddings=embeddings,
     )
     yield
     await app.state.infrastructure.close()

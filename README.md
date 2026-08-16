@@ -10,11 +10,11 @@ engineering workflow from ingestion through retrieval, generation, and evaluatio
 
 ## Current status
 
-**Phase 1 - Ingestion pipeline (implementation complete; awaiting commit approval)**
+**Phase 2 - Retrieval and evaluation (implementation complete; awaiting commit approval)**
 
-Phase 0 is complete on `main` and `dev`. PDF/TXT extraction, provenance-aware chunking,
-embedding, idempotent persistence, and document APIs are implemented and verified on `dev`.
-Phase 1 work remains uncommitted pending review and explicit approval.
+Phase 1 is merged into `main`. Dense semantic retrieval, document filtering, ordered MongoDB
+hydration, and a small evaluation baseline are implemented and verified on `dev`. Phase 2 work
+remains uncommitted pending review and explicit approval.
 
 ## Technology choices
 
@@ -57,6 +57,10 @@ question -> embed -> retrieve chunks -> generate grounded answer -> validate cit
 MongoDB is the source of truth for application records. Qdrant is a retrieval index whose
 payloads retain stable UUIDs linking each vector to its MongoDB document and chunk records.
 Uploaded source files live under the ignored `data/uploads/` directory in development.
+
+Short retrieval queries receive BGE's recommended English search instruction before embedding.
+Qdrant ranks matching chunk UUIDs, then MongoDB supplies the authoritative chunk text without
+changing that order.
 
 ## Repository layout
 
@@ -129,7 +133,18 @@ Uploads support PDF and UTF-8 TXT files up to 10 MiB. The request completes afte
 chunking, embedding, and persistence. Re-uploading identical bytes returns the existing document
 with `duplicate: true` instead of creating duplicate chunks or vectors.
 
-### 5. Run the frontend
+### 5. Search documents
+
+```bash
+curl -X POST http://localhost:8000/api/v1/retrieval/search \
+  -H "Content-Type: application/json" \
+  -d '{"query":"How does the system work?","top_k":5}'
+```
+
+Add `document_ids` to limit search to selected documents. Results include similarity score,
+chunk text, source filename, page, character offsets, and stable document/chunk IDs.
+
+### 6. Run the frontend
 
 ```bash
 cd frontend
@@ -145,6 +160,7 @@ Open `http://localhost:5173`.
 cd backend
 uv run ruff check .
 uv run pytest
+uv run python scripts/evaluate_retrieval.py
 
 cd ../frontend
 npm run lint
@@ -167,6 +183,10 @@ strategy, local embeddings, MongoDB records, Qdrant indexing, and failure-path t
 
 Implement semantic retrieval with document filters and stable source metadata. Establish a
 small labeled retrieval fixture before deciding whether hybrid search or reranking is warranted.
+
+Current synthetic baseline: `Recall@5 = 1.00`, `MRR = 1.00` across eight questions and six
+documents. This is a regression/sanity benchmark, not a production-quality claim. Reranking and
+hard score thresholds remain deferred until a larger or real-world corpus exposes a need.
 
 ### Phase 3 - Grounded generation
 
@@ -227,6 +247,12 @@ can later be promoted to `main` through an explicit review step.
   and avoids starting new work on the superseded Motor API.
 - **2026-08-16 - Retrieval evaluation before optimization:** a labeled fixture will determine
   whether reranking or hybrid search adds measurable value.
+- **2026-08-16 - Five-result dense retrieval baseline:** Qdrant cosine search returns five chunks
+  by default, with optional document filtering and no uncalibrated hard score threshold.
+- **2026-08-16 - BGE query instruction:** short questions receive the model's recommended English
+  retrieval prefix; stored passages remain unprefixed.
+- **2026-08-16 - No Phase 2 reranker:** the synthetic baseline placed every relevant chunk first,
+  so a second model would add latency and complexity without demonstrated benefit.
 - **2026-08-16 - Citation integrity is enforced in code:** generation may cite only chunk IDs in
   the retrieved context; citation grounding will not rely solely on prompt compliance.
 - **2026-08-16 - Plain CSS:** the focused v1 interface does not justify framework overhead, and

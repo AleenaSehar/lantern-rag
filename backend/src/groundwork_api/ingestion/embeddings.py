@@ -5,6 +5,8 @@ from sentence_transformers import SentenceTransformer
 
 
 class LocalEmbeddingService:
+    QUERY_INSTRUCTION = "Represent this sentence for searching relevant passages: "
+
     def __init__(self, model_name: str) -> None:
         self._model_name = model_name
 
@@ -25,3 +27,5 @@ class LocalEmbeddingService:
         )
         return vectors.tolist()
 
+    async def embed_query(self, query: str) -> list[float]:
+        return (await self.embed([f"{self.QUERY_INSTRUCTION}{query}"]))[0]
