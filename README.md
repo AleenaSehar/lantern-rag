@@ -10,11 +10,11 @@ engineering workflow from ingestion through retrieval, generation, and evaluatio
 
 ## Current status
 
-**Phase 2 - Retrieval and evaluation (implementation complete; awaiting commit approval)**
+**Phase 3 - Grounded generation (implementation complete; awaiting commit approval)**
 
-Phase 1 is merged into `main`. Dense semantic retrieval, document filtering, ordered MongoDB
-hydration, and a small evaluation baseline are implemented and verified on `dev`. Phase 2 work
-remains uncommitted pending review and explicit approval.
+Phase 2 is merged into `main`. Strict Groq generation, structured answer contracts, citation
+validation, and explicit insufficient-evidence responses are implemented and verified on `dev`.
+Phase 3 work remains uncommitted pending review and explicit approval.
 
 ## Technology choices
 
@@ -87,6 +87,9 @@ cp .env.example .env
 
 The defaults connect to the local Docker services. No API keys are needed through Phase 2.
 
+For Phase 3, create a free Groq API key and set `GROQ_API_KEY` in `.env`. Stay on Groq's Free
+plan without a payment method to avoid charges; exceeding free limits returns a rate-limit error.
+
 ### 2. Start MongoDB and Qdrant
 
 ```bash
@@ -144,7 +147,23 @@ curl -X POST http://localhost:8000/api/v1/retrieval/search \
 Add `document_ids` to limit search to selected documents. Results include similarity score,
 chunk text, source filename, page, character offsets, and stable document/chunk IDs.
 
-### 6. Run the frontend
+### 6. Generate a grounded answer
+
+```bash
+curl -X POST http://localhost:8000/api/v1/answers \
+  -H "Content-Type: application/json" \
+  -d '{"query":"How does the system work?","document_ids":["document-uuid"]}'
+```
+
+An answer has status `answered` with validated citations, or `insufficient_evidence` with a clear
+refusal and no citations. Citation IDs must come from retrieval and quoted text must occur exactly
+in the cited chunk.
+
+> **Data boundary:** answer generation sends the retrieved source chunks to Groq. Use
+> `document_ids` to control which documents can supply context. Ingestion, embedding, and
+> retrieval remain local.
+
+### 7. Run the frontend
 
 ```bash
 cd frontend
@@ -191,12 +210,13 @@ hard score thresholds remain deferred until a larger or real-world corpus expose
 ### Phase 3 - Grounded generation
 
 Generate answers with Groq, define abstention behavior, validate structured answers and
-citations with Pydantic, reject citations outside the retrieved context, and persist chat history.
+citations with Pydantic, and reject citations outside the retrieved context.
 
 ### Phase 4 - Frontend workflow
 
 Build document upload, ingestion progress, document selection, chat, and interactive citations
-that reveal the exact source chunk.
+that reveal the exact source chunk. Decide how conversation memory should work before persisting
+chat history in MongoDB.
 
 ### Phase 5 - Reliability and portfolio readiness
 
@@ -255,6 +275,12 @@ can later be promoted to `main` through an explicit review step.
   so a second model would add latency and complexity without demonstrated benefit.
 - **2026-08-16 - Citation integrity is enforced in code:** generation may cite only chunk IDs in
   the retrieved context; citation grounding will not rely solely on prompt compliance.
+- **2026-08-16 - Strict insufficient-evidence behavior:** when retrieved chunks do not support an
+  answer, the API returns a clear refusal with no citations instead of inviting model guesswork.
+- **2026-08-16 - GPT-OSS 20B structured output:** Groq's `openai/gpt-oss-20b` constrains responses
+  to the Pydantic-derived JSON schema and is available within free-tier rate limits.
+- **2026-08-16 - Exact quote validation:** application code verifies each cited ID was retrieved
+  and each citation quote is a contiguous excerpt of that chunk before returning the answer.
 - **2026-08-16 - Plain CSS:** the focused v1 interface does not justify framework overhead, and
   keeping styling direct makes the frontend easier to inspect.
 - **2026-08-16 - Approval-gated Git history:** every commit is reviewed and explicitly approved
