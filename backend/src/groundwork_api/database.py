@@ -19,6 +19,7 @@ class Infrastructure:
         mongo_client = AsyncMongoClient(
             settings.mongodb_uri,
             server_api=ServerApi("1"),
+            tz_aware=True,
         )
         qdrant_client = AsyncQdrantClient(
             url=str(settings.qdrant_url),
@@ -34,4 +35,3 @@ class Infrastructure:
         # One owner per event loop makes async client lifetimes predictable.
         await self.mongo_client.close()
         await self.qdrant_client.close()
-

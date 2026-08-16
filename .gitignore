@@ -17,4 +17,4 @@ dist/
 
 mongo_data/
 qdrant_storage/
-
+data/

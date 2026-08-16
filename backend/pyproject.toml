@@ -6,9 +6,13 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.116,<1.0",
+    "pypdf>=6.0,<7.0",
     "pydantic-settings>=2.10,<3.0",
     "pymongo>=4.13,<5.0",
+    "python-multipart>=0.0.20,<1.0",
     "qdrant-client>=1.14,<2.0",
+    "sentence-transformers>=5.0,<6.0",
+    "torch>=2.7,<3.0",
     "uvicorn[standard]>=0.35,<1.0",
 ]
 
@@ -17,6 +21,7 @@ dev = [
     "httpx>=0.28,<1.0",
     "pytest>=8.4,<9.0",
     "pytest-asyncio>=1.1,<2.0",
+    "reportlab>=4.4,<5.0",
     "ruff>=0.12,<1.0",
 ]
 
@@ -38,3 +43,10 @@ target-version = "py310"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "ASYNC"]
 
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
