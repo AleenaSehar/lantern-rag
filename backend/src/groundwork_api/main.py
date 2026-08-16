@@ -8,6 +8,7 @@ from groundwork_api import __version__
 from groundwork_api.api.router import api_router
 from groundwork_api.config import get_settings
 from groundwork_api.database import Infrastructure
+from groundwork_api.generation.service import GroundedGenerationService
 from groundwork_api.ingestion.embeddings import LocalEmbeddingService
 from groundwork_api.ingestion.service import IngestionService
 from groundwork_api.ingestion.storage import LocalFileStorage
@@ -40,6 +41,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         documents=app.state.document_repository,
         vectors=app.state.vector_repository,
         embeddings=embeddings,
+    )
+    app.state.generation_service = (
+        GroundedGenerationService(settings.groq_api_key, settings.groq_model)
+        if settings.groq_api_key
+        else None
     )
     yield
     await app.state.infrastructure.close()

@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     chunk_overlap_tokens: int = 75
     max_upload_bytes: int = 10 * 1024 * 1024
     upload_directory: str = "data/uploads"
+    groq_api_key: str | None = None
+    groq_model: str = "openai/gpt-oss-20b"
     cors_origins: list[str] = ["http://localhost:5173"]
 
     model_config = SettingsConfigDict(
