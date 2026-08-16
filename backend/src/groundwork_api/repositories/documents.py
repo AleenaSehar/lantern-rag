@@ -110,6 +110,10 @@ class DocumentRepository:
     async def delete_chunks(self, document_id: str) -> None:
         await self._chunks.delete_many({"document_id": document_id})
 
+    async def get_chunks(self, chunk_ids: list[str]) -> dict[str, Chunk]:
+        cursor = self._chunks.find({"_id": {"$in": chunk_ids}})
+        return {record["_id"]: self._to_chunk(record) async for record in cursor}
+
     @staticmethod
     def _to_document(record: dict) -> Document:
         created_at: datetime = record["created_at"]
@@ -123,4 +127,17 @@ class DocumentRepository:
             chunk_count=record["chunk_count"],
             created_at=created_at,
             error=record.get("error"),
+        )
+
+    @staticmethod
+    def _to_chunk(record: dict) -> Chunk:
+        return Chunk(
+            id=record["_id"],
+            document_id=record["document_id"],
+            index=record["index"],
+            text=record["text"],
+            page_number=record.get("page_number"),
+            char_start=record["char_start"],
+            char_end=record["char_end"],
+            token_count=record["token_count"],
         )

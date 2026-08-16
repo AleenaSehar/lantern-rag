@@ -1,0 +1,38 @@
+{
+  "documents": [
+    {
+      "filename": "solar-energy.txt",
+      "text": "Photovoltaic cells convert sunlight directly into electricity. Solar panels generate direct current, and an inverter converts it into alternating current used by buildings. Battery storage can preserve excess daytime electricity for use after sunset. Panel output depends on sunlight, orientation, temperature, and shading."
+    },
+    {
+      "filename": "ocean-currents.txt",
+      "text": "Ocean currents move heat around the planet. Surface currents are driven mainly by wind, while deep ocean circulation depends on differences in water temperature and salinity. The Gulf Stream carries warm water across the North Atlantic and affects the climate of Western Europe."
+    },
+    {
+      "filename": "honeybees.txt",
+      "text": "Honeybees communicate the location of food through the waggle dance. The angle of the dance indicates direction relative to the sun, while its duration communicates distance. Worker bees also spread floral odors that help other foragers identify the food source."
+    },
+    {
+      "filename": "bridge-design.txt",
+      "text": "A suspension bridge carries its deck from vertical hangers attached to main cables. The main cables transfer tension into towers and anchorages. This design can span long distances, but engineers must account for wind, traffic loads, material fatigue, and thermal expansion."
+    },
+    {
+      "filename": "vaccines.txt",
+      "text": "Vaccines train the immune system to recognize a pathogen without causing the disease itself. They stimulate immune memory, allowing antibodies and immune cells to respond faster during later exposure. Community vaccination can also reduce transmission and protect vulnerable people."
+    },
+    {
+      "filename": "database-indexes.txt",
+      "text": "A database index is an auxiliary data structure that speeds up record lookup. B-tree indexes support equality and range queries, while hash indexes are primarily useful for equality. Indexes improve reads but consume storage and add work to insert and update operations."
+    }
+  ],
+  "cases": [
+    {"query": "How is solar electricity made usable in a building?", "expected": "inverter converts it into alternating current"},
+    {"query": "What enables solar power to be used after dark?", "expected": "Battery storage"},
+    {"query": "What drives circulation in the deep ocean?", "expected": "temperature and salinity"},
+    {"query": "How do bees tell others how far away food is?", "expected": "duration communicates distance"},
+    {"query": "Where do suspension bridge cables transfer tension?", "expected": "towers and anchorages"},
+    {"query": "Why can vaccination protect vulnerable people?", "expected": "reduce transmission"},
+    {"query": "Which database index supports range queries?", "expected": "B-tree indexes"},
+    {"query": "What is a cost of adding database indexes?", "expected": "add work to insert and update operations"}
+  ]
+}

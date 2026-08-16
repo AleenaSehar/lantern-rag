@@ -1,6 +1,7 @@
 from qdrant_client import AsyncQdrantClient, models
 
 from groundwork_api.domain.documents import Chunk
+from groundwork_api.domain.retrieval import VectorMatch
 
 
 class VectorRepository:
@@ -59,3 +60,35 @@ class VectorRepository:
             wait=True,
         )
 
+    async def search(
+        self,
+        query_vector: list[float],
+        limit: int,
+        document_ids: list[str] | None = None,
+    ) -> list[VectorMatch]:
+        query_filter = None
+        if document_ids:
+            query_filter = models.Filter(
+                must=[
+                    models.FieldCondition(
+                        key="document_id",
+                        match=models.MatchAny(any=document_ids),
+                    )
+                ]
+            )
+        response = await self._client.query_points(
+            collection_name=self._collection,
+            query=query_vector,
+            query_filter=query_filter,
+            limit=limit,
+            with_payload=["chunk_id", "filename"],
+            with_vectors=False,
+        )
+        return [
+            VectorMatch(
+                chunk_id=str(point.payload["chunk_id"]),
+                score=point.score,
+                filename=str(point.payload["filename"]),
+            )
+            for point in response.points
+        ]
