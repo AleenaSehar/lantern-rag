@@ -8,12 +8,33 @@ from groundwork_api import __version__
 from groundwork_api.api.router import api_router
 from groundwork_api.config import get_settings
 from groundwork_api.database import Infrastructure
+from groundwork_api.ingestion.embeddings import LocalEmbeddingService
+from groundwork_api.ingestion.service import IngestionService
+from groundwork_api.ingestion.storage import LocalFileStorage
+from groundwork_api.repositories.documents import DocumentRepository
+from groundwork_api.repositories.vectors import VectorRepository
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
+    app.state.settings = settings
     app.state.infrastructure = Infrastructure.from_settings(settings)
+    app.state.document_repository = DocumentRepository(app.state.infrastructure.mongo_database)
+    app.state.vector_repository = VectorRepository(
+        app.state.infrastructure.qdrant_client,
+        settings.qdrant_collection,
+        settings.embedding_dimension,
+    )
+    embeddings = LocalEmbeddingService(settings.embedding_model)
+    app.state.ingestion_service = IngestionService(
+        documents=app.state.document_repository,
+        vectors=app.state.vector_repository,
+        embeddings=embeddings,
+        storage=LocalFileStorage(settings.upload_directory),
+        chunk_size=settings.chunk_size_tokens,
+        overlap=settings.chunk_overlap_tokens,
+    )
     yield
     await app.state.infrastructure.close()
 
@@ -38,4 +59,3 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-

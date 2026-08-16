@@ -12,6 +12,13 @@ class Settings(BaseSettings):
     mongodb_database: str = "groundwork"
     qdrant_url: AnyHttpUrl = AnyHttpUrl("http://localhost:6333")
     qdrant_api_key: str | None = None
+    qdrant_collection: str = "groundwork_chunks"
+    embedding_model: str = "BAAI/bge-small-en-v1.5"
+    embedding_dimension: int = 384
+    chunk_size_tokens: int = 500
+    chunk_overlap_tokens: int = 75
+    max_upload_bytes: int = 10 * 1024 * 1024
+    upload_directory: str = "data/uploads"
     cors_origins: list[str] = ["http://localhost:5173"]
 
     model_config = SettingsConfigDict(
@@ -24,4 +31,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

@@ -10,10 +10,11 @@ engineering workflow from ingestion through retrieval, generation, and evaluatio
 
 ## Current status
 
-**Phase 0 - Planning and scaffolding (implementation complete; awaiting commit approval)**
+**Phase 1 - Ingestion pipeline (implementation complete; awaiting commit approval)**
 
-The architecture and initial application skeleton are complete and verified locally. The work
-remains uncommitted pending review and explicit approval. Document ingestion has not started.
+Phase 0 is complete on `main` and `dev`. PDF/TXT extraction, provenance-aware chunking,
+embedding, idempotent persistence, and document APIs are implemented and verified on `dev`.
+Phase 1 work remains uncommitted pending review and explicit approval.
 
 ## Technology choices
 
@@ -26,7 +27,7 @@ groundwork uses the FARM stack: FastAPI, React, and MongoDB.
 | Plain CSS | Interface styling | The focused application does not yet justify a utility framework; plain CSS keeps the rendered structure and design decisions easy to inspect. |
 | MongoDB | Document metadata, chunk records, and chat history | Its document model fits evolving ingestion metadata and conversation records while preserving a clear source of truth outside the vector index. |
 | Qdrant | Vector search | Self-hosting demonstrates vector-infrastructure knowledge and supports payload filtering, with a configuration-compatible path to Qdrant Cloud. |
-| Sentence Transformers | Local embeddings | Local inference avoids per-document API cost and makes ingestion reproducible without a second hosted AI provider. |
+| Sentence Transformers + BGE-small | Local embeddings | `BAAI/bge-small-en-v1.5` offers strong English retrieval at a practical 384 dimensions without a second hosted AI provider. |
 | Groq | Answer generation | Its low inference latency suits interactive Q&A, and it builds on existing project experience without coupling embeddings to generation. |
 | Docker Compose | Local infrastructure | One command provides repeatable MongoDB and Qdrant services without requiring cloud accounts. |
 
@@ -54,7 +55,8 @@ question -> embed -> retrieve chunks -> generate grounded answer -> validate cit
 ```
 
 MongoDB is the source of truth for application records. Qdrant is a retrieval index whose
-payloads retain stable IDs linking each vector to its MongoDB document and chunk records.
+payloads retain stable UUIDs linking each vector to its MongoDB document and chunk records.
+Uploaded source files live under the ignored `data/uploads/` directory in development.
 
 ## Repository layout
 
@@ -79,7 +81,7 @@ compose.yaml    Local MongoDB and Qdrant services
 cp .env.example .env
 ```
 
-The defaults connect to the local Docker services. No API keys are needed in Phase 0.
+The defaults connect to the local Docker services. No API keys are needed through Phase 2.
 
 ### 2. Start MongoDB and Qdrant
 
@@ -109,7 +111,25 @@ curl http://localhost:8000/api/v1/ready
 `health` reports that the API process is alive. `ready` returns HTTP 200 only when MongoDB and
 Qdrant are reachable, otherwise HTTP 503 with per-service status.
 
-### 4. Run the frontend
+The first document ingestion downloads `BAAI/bge-small-en-v1.5` from Hugging Face. Later runs
+use the local model cache. PyTorch is locked to its official CPU build, avoiding unused CUDA
+packages on development machines.
+
+### 4. Ingest documents
+
+```bash
+curl -X POST http://localhost:8000/api/v1/documents \
+  -F "file=@/path/to/document.pdf"
+
+curl http://localhost:8000/api/v1/documents
+curl http://localhost:8000/api/v1/documents/{document_id}
+```
+
+Uploads support PDF and UTF-8 TXT files up to 10 MiB. The request completes after extraction,
+chunking, embedding, and persistence. Re-uploading identical bytes returns the existing document
+with `duplicate: true` instead of creating duplicate chunks or vectors.
+
+### 5. Run the frontend
 
 ```bash
 cd frontend
@@ -174,8 +194,8 @@ Every phase ends with a recap and explicit approval before the next phase begins
 - Nothing is pushed to the remote implicitly.
 - Each meaningful change updates this README in the same work session.
 
-Because Git branches point to commits, the first approved scaffold commit will establish `main`.
-The `dev` branch will then be created from that baseline for subsequent phases.
+Both branches are established on GitHub. Phase work begins on `dev`; approved stable milestones
+can later be promoted to `main` through an explicit review step.
 
 ## Decisions log
 
@@ -186,7 +206,21 @@ The `dev` branch will then be created from that baseline for subsequent phases.
 - **2026-08-16 - Local MongoDB:** Docker Compose makes development reproducible without accounts;
   environment-based configuration leaves MongoDB Atlas available for deployment.
 - **2026-08-16 - Local Sentence Transformers:** embeddings remain reproducible and free of API
-  credentials; the specific model and dimensions will be selected before Phase 1 implementation.
+  credentials; `BAAI/bge-small-en-v1.5` balances English retrieval quality, 384-dimensional
+  storage, and CPU ingestion cost.
+- **2026-08-16 - Structure-aware 500/75 chunking:** chunks target 500 model tokens with 75-token
+  overlap, prefer paragraph/sentence boundaries, and never cross PDF pages so citations retain
+  clear provenance.
+- **2026-08-16 - Stable application UUIDs:** document and chunk IDs are generated outside either
+  database and shared between MongoDB records and Qdrant payloads for machine-checkable citations.
+- **2026-08-16 - SHA-256 idempotency:** identical file bytes resolve to the existing document,
+  preventing duplicate embeddings even when the upload filename changes.
+- **2026-08-16 - Local atomic file storage:** v1 stores ignored source files on disk via atomic
+  replacement; the storage boundary can move to S3-compatible object storage at deployment time.
+- **2026-08-16 - Synchronous v1 ingestion:** upload requests wait for indexing while durable
+  processing/ready/failed states preserve observability without introducing a premature queue.
+- **2026-08-16 - CPU-only PyTorch:** the lockfile uses PyTorch's official CPU wheel index to avoid
+  pulling several gigabytes of unused CUDA dependencies for local embeddings.
 - **2026-08-16 - Groq for generation:** Groq provides low-latency inference and uses existing
   project experience; the exact production model will be selected in Phase 3.
 - **2026-08-16 - PyMongo Async API:** it is the native async MongoDB driver for a FastAPI service
