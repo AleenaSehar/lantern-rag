@@ -1,6 +1,6 @@
-# groundwork
+# lantern
 
-groundwork is a retrieval-augmented generation (RAG) document Q&A application. Users upload
+lantern is a retrieval-augmented generation (RAG) document Q&A application. Users upload
 PDF or text documents, ask questions, and receive answers grounded in the uploaded material.
 Every answer will expose the exact source chunks used to produce it, making citation visibility
 a core product behavior rather than an afterthought.
@@ -10,22 +10,22 @@ engineering workflow from ingestion through retrieval, generation, and evaluatio
 
 ## Current status
 
-**Phase 4 - Frontend workflow (implementation complete on `dev`)**
+**Phase 5 - Reliability and portfolio readiness (implementation complete on `dev`)**
 
-Phase 3 is merged into `main`. The React workspace now supports document upload and selection,
-grounded questions, explicit insufficient-evidence states, and expandable citation excerpts.
-The local workflow has been reviewed and approved for the Phase 4 commit.
+Phase 4 is merged into `main`. The product is now named Lantern. Frontend behavior tests,
+lockfile-driven CI, privacy-conscious request logging, synthetic demo files, a recording script,
+zero-cost deployment notes, and an MIT License are ready for local review before commit approval.
 
 ## Technology choices
 
-groundwork uses the FARM stack: FastAPI, React, and MongoDB.
+lantern uses the FARM stack: FastAPI, React, and MongoDB.
 
 | Technology | Role | Why it is here |
 | --- | --- | --- |
 | FastAPI + Python | Async backend API | Python has the strongest AI/data ecosystem; FastAPI adds native async handling, generated OpenAPI documentation, and Pydantic-enforced contracts. |
 | React + Vite + TypeScript | Browser application | React supports an interactive citation workflow, Vite keeps development fast, and TypeScript makes frontend/backend contracts easier to maintain. |
 | Plain CSS | Interface styling | The focused application does not yet justify a utility framework; plain CSS keeps the rendered structure and design decisions easy to inspect. |
-| MongoDB | Document metadata, chunk records, and chat history | Its document model fits evolving ingestion metadata and conversation records while preserving a clear source of truth outside the vector index. |
+| MongoDB | Document metadata and chunk records | Its document model fits evolving ingestion metadata while preserving a clear source of truth outside the vector index. Chat persistence is deferred until retention rules are defined. |
 | Qdrant | Vector search | Self-hosting demonstrates vector-infrastructure knowledge and supports payload filtering, with a configuration-compatible path to Qdrant Cloud. |
 | Sentence Transformers + BGE-small | Local embeddings | `BAAI/bge-small-en-v1.5` offers strong English retrieval at a practical 384 dimensions without a second hosted AI provider. |
 | Groq | Answer generation | Its low inference latency suits interactive Q&A, and it builds on existing project experience without coupling embeddings to generation. |
@@ -67,6 +67,9 @@ changing that order.
 ```text
 backend/        FastAPI application and backend tests
 frontend/       React/Vite browser application
+demo/           Synthetic documents for a repeatable walkthrough
+docs/           Demo script and deployment guidance
+.github/        Pull-request and branch CI workflow
 compose.yaml    Local MongoDB and Qdrant services
 ```
 
@@ -191,9 +194,29 @@ uv run pytest
 uv run python scripts/evaluate_retrieval.py
 
 cd ../frontend
+npm run test
 npm run lint
 npm run build
 ```
+
+GitHub Actions runs the same backend and frontend checks on pull requests and pushes to `main`
+or `dev`. Tests do not call Groq and therefore do not require secrets or consume API quota.
+
+Every API response includes a server-generated `X-Request-ID`. Request logs record only the HTTP
+method, path, status, duration, and request ID; query strings and bodies are deliberately excluded
+because they may contain private document content.
+
+## Demo
+
+The repository includes two synthetic documents so the core behavior can be demonstrated without
+uploading private material. Follow the [two-minute demo script](docs/demo-script.md) to show
+document-scoped retrieval, exact citation excerpts, and a deliberate refusal.
+
+## Deployment and security
+
+Lantern is locally runnable at no infrastructure cost. [Deployment notes](docs/deployment.md)
+describe a future production topology and clearly identify the authentication, isolation,
+storage, and rate-limiting work required before a public multi-user release.
 
 ## Delivery plan
 
@@ -296,9 +319,21 @@ can later be promoted to `main` through an explicit review step.
   retention, deletion, and multi-session behavior are designed together for MongoDB persistence.
 - **2026-08-17 - Inline expandable citations:** source excerpts open beneath the answer so users
   can inspect evidence without losing their place in the conversation.
+- **2026-08-17 - Lantern product name:** the user-facing project and package metadata were renamed
+  while stable Python imports and data-store identifiers were retained to avoid needless data
+  migration and code churn.
+- **2026-08-17 - Deterministic CI:** frontend tests mock HTTP responses and backend tests mock the
+  generation boundary, so pull-request checks use no Groq quota or infrastructure secrets.
+- **2026-08-17 - Metadata-only request logging:** server-generated request IDs and timing support
+  diagnosis without writing document content, questions, filenames, or credentials to logs.
+- **2026-08-17 - Deployment documented, not purchased:** Phase 5 records the production topology
+  and its security gaps without creating paid cloud resources.
+- **2026-08-17 - MIT License:** the source remains copyrighted to Aleena Sehar while allowing
+  reuse, modification, and distribution when the copyright and license notice are preserved.
 - **2026-08-16 - Approval-gated Git history:** every commit is reviewed and explicitly approved
   before creation; `dev` integrates active work and `main` remains stable.
 
 ## License
 
-No license has been selected yet.
+Lantern is available under the [MIT License](LICENSE). Copyright remains with Aleena Sehar;
+the license permits reuse and modification while providing the software without warranty.

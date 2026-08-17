@@ -12,7 +12,7 @@ router = APIRouter()
 @router.get("/health", response_model=HealthResponse)
 async def health() -> HealthResponse:
     """Report process liveness without depending on external services."""
-    return HealthResponse(status="ok", service="groundwork-api", version=__version__)
+    return HealthResponse(status="ok", service="lantern-api", version=__version__)
 
 
 async def _mongo_status(infrastructure: Infrastructure) -> DependencyStatus:
@@ -51,4 +51,3 @@ async def readiness(request: Request, response: Response) -> ReadinessResponse:
         status="ready" if is_ready else "not_ready",
         dependencies=dependencies,
     )
-

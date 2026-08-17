@@ -28,7 +28,7 @@ function CitationList({ citations }: { citations: Citation[] }) {
         const location = citation.page_number ? `Page ${citation.page_number}` : `Chunk ${citation.chunk_index + 1}`;
         return (
           <div className="citation" key={citation.chunk_id}>
-            <button className="citation-trigger" type="button" aria-expanded={isOpen} onClick={() => setOpenCitation(isOpen ? null : citation.chunk_id)}>
+            <button className="citation-trigger" type="button" aria-label={`Source ${index + 1}: ${citation.filename}, ${location}`} aria-expanded={isOpen} onClick={() => setOpenCitation(isOpen ? null : citation.chunk_id)}>
               <span className="citation-number">{index + 1}</span>
               <span className="citation-title"><strong>{citation.filename}</strong><small>{location}</small></span>
               {isOpen ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
@@ -126,7 +126,7 @@ function App() {
   return (
     <main className="app-shell">
       <header className="app-header">
-        <div><a className="wordmark" href="/" aria-label="groundwork home">groundwork</a><span className="product-label">Grounded document Q&amp;A</span></div>
+        <div><a className="wordmark" href="/" aria-label="lantern home">lantern</a><span className="product-label">Grounded document Q&amp;A</span></div>
         <span className="connection-status"><span /> Local workspace</span>
       </header>
 
@@ -173,7 +173,7 @@ function App() {
             {messages.length === 0 && <div className="conversation-empty"><div className="evidence-mark"><FileText size={26} /></div><h3>Ask a question about your documents</h3><p>Answers use only the selected sources. Every supported answer includes an exact excerpt.</p></div>}
             {messages.map((message) => (
               <article className={`message ${message.role}`} key={message.id}>
-                <p className="message-role">{message.role === "user" ? "You" : "groundwork"}</p>
+                <p className="message-role">{message.role === "user" ? "You" : "lantern"}</p>
                 {message.status === "insufficient_evidence" && <span className="refusal-label"><AlertCircle size={14} /> Insufficient evidence</span>}
                 <p className="message-text">{message.text}</p>
                 {message.citations && message.citations.length > 0 && <CitationList citations={message.citations} />}

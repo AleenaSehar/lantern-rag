@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from httpx import ASGITransport, AsyncClient
 
 from groundwork_api.main import app
@@ -14,7 +16,7 @@ async def test_health_reports_service_identity() -> None:
     assert response.status_code == 200
     assert response.json() == {
         "status": "ok",
-        "service": "groundwork-api",
+        "service": "lantern-api",
         "version": "0.1.0",
     }
-
+    UUID(response.headers["X-Request-ID"])

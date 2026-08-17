@@ -1,7 +1,7 @@
 [project]
-name = "groundwork-api"
+name = "lantern-api"
 version = "0.1.0"
-description = "Async API for the groundwork document Q&A application"
+description = "Async API for the lantern document Q&A application"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
