@@ -1,5 +1,4 @@
-# groundwork API
+# lantern API
 
-The FastAPI backend for groundwork. Project-level setup and architecture documentation live in
+The FastAPI backend for lantern. Project-level setup and architecture documentation live in
 the repository root `README.md`.
-
