@@ -10,11 +10,11 @@ engineering workflow from ingestion through retrieval, generation, and evaluatio
 
 ## Current status
 
-**Phase 3 - Grounded generation (implementation complete; awaiting commit approval)**
+**Phase 4 - Frontend workflow (implementation complete on `dev`)**
 
-Phase 2 is merged into `main`. Strict Groq generation, structured answer contracts, citation
-validation, and explicit insufficient-evidence responses are implemented and verified on `dev`.
-Phase 3 work remains uncommitted pending review and explicit approval.
+Phase 3 is merged into `main`. The React workspace now supports document upload and selection,
+grounded questions, explicit insufficient-evidence states, and expandable citation excerpts.
+The local workflow has been reviewed and approved for the Phase 4 commit.
 
 ## Technology choices
 
@@ -173,6 +173,15 @@ npm run dev
 
 Open `http://localhost:5173`.
 
+The document panel lists indexed sources and controls which documents may supply evidence for a
+question. Upload PDF or TXT files with the `+` button, select the relevant sources, and ask a
+question in the conversation panel. Selecting a citation beneath an answer reveals the exact
+source excerpt returned by the grounded-answer API.
+
+Conversation messages are intentionally kept in browser memory during Phase 4 and are cleared by
+a refresh. Persisted chat history requires a retention and privacy policy and is deferred until
+that behavior can be designed explicitly.
+
 ### Quality checks
 
 ```bash
@@ -215,8 +224,8 @@ citations with Pydantic, and reject citations outside the retrieved context.
 ### Phase 4 - Frontend workflow
 
 Build document upload, ingestion progress, document selection, chat, and interactive citations
-that reveal the exact source chunk. Decide how conversation memory should work before persisting
-chat history in MongoDB.
+that reveal the exact source chunk. The initial conversation is session-local; MongoDB chat
+history remains deferred until retention and deletion behavior is defined.
 
 ### Phase 5 - Reliability and portfolio readiness
 
@@ -283,6 +292,10 @@ can later be promoted to `main` through an explicit review step.
   and each citation quote is a contiguous excerpt of that chunk before returning the answer.
 - **2026-08-16 - Plain CSS:** the focused v1 interface does not justify framework overhead, and
   keeping styling direct makes the frontend easier to inspect.
+- **2026-08-17 - Session-local conversation:** Phase 4 keeps chat in browser memory until
+  retention, deletion, and multi-session behavior are designed together for MongoDB persistence.
+- **2026-08-17 - Inline expandable citations:** source excerpts open beneath the answer so users
+  can inspect evidence without losing their place in the conversation.
 - **2026-08-16 - Approval-gated Git history:** every commit is reviewed and explicitly approved
   before creation; `dev` integrates active work and `main` remains stable.
 
