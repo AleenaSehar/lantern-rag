@@ -10,11 +10,11 @@ engineering workflow from ingestion through retrieval, generation, and evaluatio
 
 ## Current status
 
-**Phase 5 - Reliability and portfolio readiness (implementation complete on `dev`)**
+**Version 1 complete - Portfolio-ready RAG workflow**
 
-Phase 4 is merged into `main`. The product is now named Lantern. Frontend behavior tests,
-lockfile-driven CI, privacy-conscious request logging, synthetic demo files, a recording script,
-zero-cost deployment notes, and an MIT License are ready for local review before commit approval.
+All five planned phases are merged into `main`. Lantern includes ingestion, evaluated retrieval,
+strict grounded generation, interactive citations, frontend behavior tests, lockfile-driven CI,
+privacy-conscious request logging, a repeatable demo, deployment notes, and an MIT License.
 
 ## Technology choices
 
